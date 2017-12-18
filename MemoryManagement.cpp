@@ -13,7 +13,8 @@ struct processData runningProcess, arrivedProcess;
 bool processAllocated = false;
 
 /*-----------Output Files-------------*/
-ofstream schedulerLog("scheduler.log");
+ofstream out("Output.txt");
+ofstream logout("log.txt");
 
 /*---------Functions' Headers-----*/
 void receiveProcesses();
@@ -28,6 +29,7 @@ void RR_Algorithm();
 void runProcess();
 void switchProcess();
 void print_queue(queue<struct processData> q);
+void outFile();
 
 int main()
 {
@@ -42,6 +44,7 @@ int main()
 		currentTime++;
 	}
 	RR_Algorithm();
+	outFile();
 	system("pause");
 	return 0;
 }
@@ -72,10 +75,11 @@ void runProcess()
 	int startTime;
 	if (runningProcess.remainingTime == runningProcess.runningTime) {
 		//allocate in memory 
-		processAllocated = allocate(runningProcess);
-		processTable[runningProcess.id - 1].memStart = runningProcess.allocatedMemory->startingAdd;
-		processTable[runningProcess.id - 1].memEnd = runningProcess.allocatedMemory->startingAdd + pow(2, runningProcess.allocatedMemory->size) - 1;
-		processTable[runningProcess.id - 1].startTime = currentTime; 
+		if (allocate(runningProcess)) {
+			processTable[runningProcess.id - 1].memStart = runningProcess.allocatedMemory->startingAdd;
+			processTable[runningProcess.id - 1].memEnd = runningProcess.allocatedMemory->startingAdd + pow(2, runningProcess.allocatedMemory->size) - 1;
+			processTable[runningProcess.id - 1].startTime = currentTime;
+		}
 	}
 	else {
 		switchProcess();
@@ -87,7 +91,7 @@ void runProcess()
 			//Updating process data and process block
 			runningProcess.remainingTime -= quantum;
 			currentTime += quantum;
-			cout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", stopped at " << currentTime << ", " << runningProcess.remainingTime << " remaining. Memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
+			logout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", stopped at " << currentTime << ", " << runningProcess.remainingTime << " remaining. Memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
 			currentTime++;
 			receiveProcesses();
 			switchProcess();
@@ -97,11 +101,10 @@ void runProcess()
 		else
 		{
 			currentTime += runningProcess.remainingTime;
-			cout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", stopped at " << currentTime << ". Memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
+			logout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", finished at " << currentTime << ". Memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
 
 			receiveProcesses();
-			runningProcess.remainingTime = 0;
-			processTable[runningProcess.id - 1].state = "finished";
+			processTable[runningProcess.id - 1].finishTime = currentTime;
 			// deallocate Memory 
 			deallocate(runningProcess);
 			currentTime++;
@@ -111,10 +114,13 @@ void runProcess()
 	}
 	else {
 
-		cout << "Could not allocate process" << endl;
+		logout << "Could not allocate process" << endl;
+		runningProcess.postponedCount++;
 		if (runningProcess.postponedCount == 5) {
-			cout << "Removing process from ready queue." << endl;
+			logout << "Removing process from ready queue." << endl;
+			processesCount--;
 		}
+		else roundRobinQ.push(runningProcess);
 	}
 	
 }
@@ -126,6 +132,8 @@ void InsertinProcessTable(struct processData &process) {
 		pB.runningTime = process.runningTime;
 		pB.finishTime = pB.arrivalTime;
 		pB.memSize = process.size;
+		pB.memStart = 0;
+		pB.memEnd = 0;
 		processTable.push_back(pB);
 	
 }
@@ -146,7 +154,6 @@ bool allocate(struct processData &process) {
 		i++;
 	}
 	if (!found) {
-		process.postponedCount++;
 		return false;
 	}
 	//function to split this free space till required size
@@ -162,7 +169,7 @@ bool Split(memNode* currentNode, int requiredSize, struct processData &process) 
 		return true;
 	}
 	memNode *left = new memNode(currentNode->size - 1, currentNode->startingAdd, currentNode);
-	memNode *right = new memNode(currentNode->size - 1, currentNode->startingAdd + pow(2, currentNode->size) - 1, currentNode);
+	memNode *right = new memNode(currentNode->size - 1, currentNode->startingAdd + pow(2, currentNode->size - 1), currentNode);
 	currentNode->left = left;
 	currentNode->right = right;
 	currentNode->free = false;
@@ -199,7 +206,7 @@ void receiveProcesses() {
 
 void switchProcess() {
 
-	cout << "Process switching    : started at " << currentTime << " finished at " << currentTime + switchingTime << endl;
+	logout << "Process switching    : started at " << currentTime << " finished at " << currentTime + switchingTime << endl;
 	currentTime += switchingTime+1;
 }
 
@@ -209,17 +216,17 @@ void print_queue(queue<struct processData> q)
 	struct processData currentProcess;
 	int size = q.size();
 	int i = 0;
-	cout << "Queue: ";
+	logout << "Queue: ";
 	while (i<size)
 	{
 		currentProcess = q.front();
-		std::cout << "T" << q.front().id;
-		if (i != size - 1) cout << ", ";
+		logout << "T" << q.front().id;
+		if (i != size - 1) logout << ", ";
 		q.pop();
 		q.push(currentProcess);
 		i++;
 	}
-	std::cout << std::endl;
+	logout << std::endl;
 }
 
 // This function loads the input file into a queue
@@ -262,7 +269,12 @@ void loadInputFile()
 	return;
 }
 
-
+void outFile() {
+	out << "process_id\trun_time\tarrival_time\tfinish_time\tmem_size\tmem_start\tmem_end" << endl;
+	for (int i = 0; i < processTable.size(); i++) {
+		out << "T" << processTable[i].id << "\t\t" << processTable[i].runningTime << "\t\t" << processTable[i].arrivalTime << "\t\t" << processTable[i].finishTime << "\t\t" << processTable[i].memSize << "\t\t" << processTable[i].memStart << "\t\t" << processTable[i].memEnd << endl;
+	}
+}
 int getHighestPowerofTwo(int size) {
 	return ceil(log2(size));
 }
