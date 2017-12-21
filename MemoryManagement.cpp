@@ -60,10 +60,12 @@ void RR_Algorithm()
 			runningProcess = roundRobinQ.front();
 			roundRobinQ.pop();
 			runProcess();
+			if (!roundRobinQ.empty()) switchProcess();
 		}
 		else
 		{
 			currentTime++;
+			receiveProcesses();
 		}
 	}
 	return;
@@ -81,10 +83,9 @@ void runProcess()
 			processTable[runningProcess.id - 1].startTime = currentTime;
 		}
 	}
-	else {
-		switchProcess();
-	}
+
 	startTime = currentTime;
+
 	if (runningProcess.allocatedMemory != NULL) {
 		if (runningProcess.remainingTime>quantum)  // The process will not finish this loop
 		{
@@ -94,9 +95,7 @@ void runProcess()
 			logout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", stopped at " << currentTime << ", " << runningProcess.remainingTime << " remaining. Memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
 			currentTime++;
 			receiveProcesses();
-			switchProcess();
 			roundRobinQ.push(runningProcess);
-
 		}
 		else
 		{
@@ -109,7 +108,6 @@ void runProcess()
 			deallocate(runningProcess);
 			currentTime++;
 			finishedCount++;
-			// update process block --> log
 		}
 	}
 	else {
@@ -255,6 +253,7 @@ void loadInputFile()
 		else {
 			stringstream ss(Data);
 			ss >> pid >> currentProcess.runningTime >> currentProcess.arrivalTime >> currentProcess.size;
+			currentProcess.size += 6;
 			pidInt = int(pid[1]) - 48;
 			currentProcess.id = pidInt;
 			currentProcess.remainingTime = currentProcess.runningTime;
