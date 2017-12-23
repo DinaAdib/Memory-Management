@@ -60,7 +60,7 @@ void RR_Algorithm()
 			runningProcess = roundRobinQ.front();
 			roundRobinQ.pop();
 			runProcess();
-			if (!roundRobinQ.empty()) switchProcess();
+			if (!roundRobinQ.empty() && runningProcess.allocatedMemory!=NULL) switchProcess();
 		}
 		else
 		{
@@ -271,7 +271,7 @@ void loadInputFile()
 void outFile() {
 	out << "process_id\trun_time\tarrival_time\tfinish_time\tmem_size\tmem_start\tmem_end" << endl;
 	for (int i = 0; i < processTable.size(); i++) {
-		out << "T" << processTable[i].id << "\t\t" << processTable[i].runningTime << "\t\t" << processTable[i].arrivalTime << "\t\t" << processTable[i].finishTime << "\t\t" << processTable[i].memSize << "\t\t" << processTable[i].memStart << "\t\t" << processTable[i].memEnd << endl;
+		out << "T" << processTable[i].id << "\t\t" << processTable[i].runningTime << "\t\t" << processTable[i].arrivalTime << "\t\t" << processTable[i].finishTime << "\t\t" << processTable[i].memSize-6 << "\t\t" << processTable[i].memStart << "\t\t" << processTable[i].memEnd << endl;
 	}
 }
 int getHighestPowerofTwo(int size) {
