@@ -60,7 +60,7 @@ void RR_Algorithm()
 			runningProcess = roundRobinQ.front();
 			roundRobinQ.pop();
 			runProcess();
-			if (!roundRobinQ.empty() && runningProcess.allocatedMemory!=NULL) switchProcess();
+			if (!roundRobinQ.empty() && runningProcess.allocatedMemory!=NULL && runningProcess.id != roundRobinQ.front().id) switchProcess();
 		}
 		else
 		{
