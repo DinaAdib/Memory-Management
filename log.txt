@@ -1,0 +1,29 @@
+Queue: T1
+Executing process T1 : started at 0, stopped at 20, 10 remaining, memory starts at 0 and ends at 255
+Process switching    : started at 21, finished at 23
+Queue: T2, T3, T4, T1
+Executing process T2 : started at 24, stopped at 44, 40 remaining, memory starts at 256 and ends at 383
+Process switching    : started at 45, finished at 47
+Queue: T3, T4, T1, T2
+Executing process T3 : started at 48, stopped at 68, 10 remaining, memory starts at 384 and ends at 511
+Process switching    : started at 69, finished at 71
+Queue: T4, T1, T2, T3
+Executing process T4 : started at 72, stopped at 92, 10 remaining, memory starts at 512 and ends at 767
+Process switching    : started at 93, finished at 95
+Queue: T1, T2, T3, T5, T4
+Executing process T1 : started at 96, finished at 106, memory starts at 0 and ends at 255
+Process switching    : started at 107, finished at 109
+Queue: T2, T3, T5, T4
+Executing process T2 : started at 110, stopped at 130, 20 remaining, memory starts at 256 and ends at 383
+Process switching    : started at 131, finished at 133
+Queue: T3, T5, T4, T2
+Executing process T3 : started at 134, finished at 144, memory starts at 384 and ends at 511
+Process switching    : started at 145, finished at 147
+Queue: T5, T4, T2
+Executing process T5 : started at 148, finished at 150, memory starts at 384 and ends at 447
+Process switching    : started at 151, finished at 153
+Queue: T4, T2
+Executing process T4 : started at 154, finished at 164, memory starts at 512 and ends at 767
+Process switching    : started at 165, finished at 167
+Queue: T2
+Executing process T2 : started at 168, finished at 188, memory starts at 256 and ends at 383
