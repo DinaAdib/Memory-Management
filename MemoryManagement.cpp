@@ -13,8 +13,8 @@ struct processData runningProcess, arrivedProcess;
 bool processAllocated = false;
 
 /*-----------Output Files-------------*/
-ofstream out("Output.txt");
-ofstream logout("log.txt");
+ofstream out("output3.txt");
+ofstream logout("log3.txt");
 
 /*---------Functions' Headers-----*/
 void receiveProcesses();
@@ -64,9 +64,9 @@ void RR_Algorithm()
 		}
 		else
 		{
-			currentTime++;
 			receiveProcesses();
 		}
+		currentTime++;
 	}
 	return;
 }
@@ -92,21 +92,19 @@ void runProcess()
 			//Updating process data and process block
 			runningProcess.remainingTime -= quantum;
 			currentTime += quantum;
-			logout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", stopped at " << currentTime << ", " << runningProcess.remainingTime << " remaining. Memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
-			currentTime++;
+			logout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", stopped at " << currentTime << ", " << runningProcess.remainingTime << " remaining, memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
 			receiveProcesses();
 			roundRobinQ.push(runningProcess);
 		}
 		else
 		{
 			currentTime += runningProcess.remainingTime;
-			logout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", finished at " << currentTime << ". Memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
+			logout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", finished at " << currentTime << ", memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
 
 			receiveProcesses();
 			processTable[runningProcess.id - 1].finishTime = currentTime;
 			// deallocate Memory 
 			deallocate(runningProcess);
-			currentTime++;
 			finishedCount++;
 		}
 	}
@@ -203,9 +201,9 @@ void receiveProcesses() {
 }
 
 void switchProcess() {
-
-	logout << "Process switching    : started at " << currentTime << " finished at " << currentTime + switchingTime << endl;
-	currentTime += switchingTime+1;
+	currentTime++;
+	logout << "Process switching    : started at " << currentTime << ", finished at " << currentTime + switchingTime << endl;
+	currentTime += switchingTime;
 }
 
 
@@ -254,7 +252,7 @@ void loadInputFile()
 			stringstream ss(Data);
 			ss >> pid >> currentProcess.runningTime >> currentProcess.arrivalTime >> currentProcess.size;
 			currentProcess.size += 6;
-			pidInt = int(pid[1]) - 48;
+			pidInt = stoi(pid.erase(0, 1));
 			currentProcess.id = pidInt;
 			currentProcess.remainingTime = currentProcess.runningTime;
 			allProcesses.push(currentProcess);
