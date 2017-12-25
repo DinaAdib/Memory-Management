@@ -11,10 +11,10 @@ memoryTree Memory;
 int quantum = 0, switchingTime = 0, finishedCount = 0, processesCount = 0, currentTime = 0;
 struct processData runningProcess, arrivedProcess;
 bool processAllocated = false;
-
+bool stay = true;
 /*-----------Output Files-------------*/
-ofstream out("output3.txt");
-ofstream logout("log3.txt");
+ofstream out("output.txt");
+ofstream logout("log.txt");
 
 /*---------Functions' Headers-----*/
 void receiveProcesses();
@@ -54,19 +54,19 @@ void RR_Algorithm()
 {
 	currentTime--;
 	while (finishedCount < processesCount) {
+
+		if (roundRobinQ.empty()) {
+			receiveProcesses();
+		}
 		if (!roundRobinQ.empty())
 		{
 			print_queue(roundRobinQ);
 			runningProcess = roundRobinQ.front();
 			roundRobinQ.pop();
 			runProcess();
-			if (!roundRobinQ.empty() && runningProcess.allocatedMemory!=NULL && runningProcess.id != roundRobinQ.front().id) switchProcess();
+			if (!roundRobinQ.empty() && runningProcess.allocatedMemory != NULL) switchProcess();
 		}
-		else
-		{
-			receiveProcesses();
-		}
-		currentTime++;
+		if(runningProcess.allocatedMemory != NULL) currentTime++;
 	}
 	return;
 }
@@ -74,6 +74,7 @@ void RR_Algorithm()
 //This function is used to run process on top of readyQueue
 void runProcess()
 {	
+	stay = true;
 	int startTime;
 	if (runningProcess.remainingTime == runningProcess.runningTime) {
 		//allocate in memory 
@@ -87,30 +88,39 @@ void runProcess()
 	startTime = currentTime;
 
 	if (runningProcess.allocatedMemory != NULL) {
-		if (runningProcess.remainingTime>quantum)  // The process will not finish this loop
-		{
-			//Updating process data and process block
-			runningProcess.remainingTime -= quantum;
-			currentTime += quantum;
+		while (stay) {
+			if (runningProcess.remainingTime>quantum)  // The process will not finish this time
+			{
+				//Updating process data and process block
+				runningProcess.remainingTime -= quantum;
+				currentTime += quantum;
+				receiveProcesses();
+				if (!roundRobinQ.empty()) stay = false;
+			}
+			else
+			{
+				currentTime += runningProcess.remainingTime;
+				runningProcess.remainingTime = 0;
+				receiveProcesses();
+				processTable[runningProcess.id - 1].finishTime = currentTime;
+				stay = false;
+			}
+		}
+		if (runningProcess.remainingTime != 0) {
 			logout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", stopped at " << currentTime << ", " << runningProcess.remainingTime << " remaining, memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
-			receiveProcesses();
 			roundRobinQ.push(runningProcess);
 		}
-		else
-		{
-			currentTime += runningProcess.remainingTime;
+		else {
 			logout << "Executing process T" << runningProcess.id << " : started at " << startTime << ", finished at " << currentTime << ", memory starts at " << processTable[runningProcess.id - 1].memStart << " and ends at " << processTable[runningProcess.id - 1].memEnd << endl;
-
-			receiveProcesses();
-			processTable[runningProcess.id - 1].finishTime = currentTime;
 			// deallocate Memory 
 			deallocate(runningProcess);
 			finishedCount++;
 		}
+	
 	}
 	else {
 
-		logout << "Could not allocate process" << endl;
+		logout << "No space for process T"<< runningProcess.id << endl;
 		runningProcess.postponedCount++;
 		if (runningProcess.postponedCount == 5) {
 			logout << "Removing process from ready queue." << endl;
@@ -228,7 +238,7 @@ void print_queue(queue<struct processData> q)
 // This function loads the input file into a queue
 void loadInputFile()
 {
-	ifstream inp("processes.txt");
+	ifstream inp("input.txt");
 	string Data;
 	int runTime, arrivalTime, memSize;
 	string pid;
