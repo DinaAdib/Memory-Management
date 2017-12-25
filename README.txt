@@ -7,3 +7,4 @@ In our program, we have several assumptions:
 ---------------------------------------------
 1-If there's a process that could not be allocated at time x, the following process is run at time x+1 
 2-If there's only 1 process in the queue,no switching time is computed and the process is left to run normally until it finishes or until another process arrives. At such case, the log is updated only once with the starting and stopping time of this single process.
+3-If new processes arrive while a process is running, they are pushed in the ready queue once the process finishes and then the process that was running is pushed.
